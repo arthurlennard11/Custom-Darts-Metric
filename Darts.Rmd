@@ -1,0 +1,1103 @@
+---
+title: "Darts"
+output: html_document
+date: "2025-04-15"
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(dplyr)
+library(tidyr)
+library(rvest)
+library(fmsb)
+library(ggimage)
+
+Darts = read_csv("/Users/arthurlennard/Downloads/Darts STOR538 - Download this one as a csv.csv")
+Darts$`Chance of Checking Out in Next 3 Throws` = as.numeric(Darts$`Chance of Checking Out in Next 3 Throws`)
+Darts$`Change in < col` = as.numeric(Darts$`Change in < col`)
+
+for (i in 1:nrow(Darts)) {
+  if (Darts$`Leg Win? (Bin)`[i] == 1) {
+    Darts$`Chance of Checking Out in Next 3 Throws`[i] = 100
+  }
+}
+```
+
+```{r}
+Darts = Darts %>% 
+  mutate(Name = str_replace(Name, "Van Gerwin", "Van Gerwen"))
+
+Luke = Darts %>%
+  filter(Name == "Littler")
+MVG = Darts %>%
+  filter(Name == "Van Gerwen")
+```
+
+```{r}
+ggplot() + 
+  geom_density(mapping=aes(x=`Score Left`), data=Luke, color="blue") + 
+  geom_density(mapping=aes(x=`Score Left`), data=MVG, color="red")
+```
+```{r}
+Luke13 = Luke %>%
+  filter(Leg == 13) %>%
+  filter(`Chance of Checking Out in Next 3 Throws` >= 0)
+last_row_luke1 = Luke1[nrow(Luke1), ]
+MVG13 = MVG %>%
+  filter(Leg == 13) %>%
+  filter(`Chance of Checking Out in Next 3 Throws` >= 0)
+
+Luke <- Luke %>%
+  group_by(Leg) %>%
+  mutate(throw_num = row_number())
+
+MVG <- MVG %>%
+  group_by(Leg) %>%
+  mutate(throw_num = row_number())
+
+LukeWin = Luke %>%
+  filter(throw_num >= 6)
+MVGWin = MVG %>%
+  filter(throw_num >= 6)
+
+ggplot() + 
+  geom_hline(yintercept = 100, color = "black") +
+  annotate("text", x = 2, y = 106, label = "Win", size = 2) + 
+  geom_point(data=LukeWin, aes(x=throw_num, y=`Chance of Checking Out in Next 3 Throws`), color="orange") + 
+  geom_line(data=LukeWin, aes(x=throw_num, y=`Chance of Checking Out in Next 3 Throws`, group=1), color="orange") + 
+#  geom_image(data = last_row_luke1, aes(image = "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/2025-04-03_Premier_League_Darts_Berlin_2025_by_Sandro_Halank%E2%80%93123.jpg/250px-2025-04-03_Premier_League_Darts_Berlin_2025_by_Sandro_Halank%E2%80%93123.jpg", x=seq_along(`Chance of Checking Out in Next 3 Throws`), y=`Chance of Checking Out in Next 3 Throws`), size = 0.08, x=17) + 
+  geom_point(data=MVGWin, aes(x=throw_num, y=`Chance of Checking Out in Next 3 Throws`), color="skyblue") + 
+  geom_line(data=MVGWin, aes(x=throw_num, y=`Chance of Checking Out in Next 3 Throws`, group=1), color="skyblue") +
+  xlab("Darts Thrown: Each Leg") + 
+  ylab("Chance of Checking out in Next 3 Throws") +
+#  geom_image(data = last_row_mvg1, aes(image = "https://static.independent.co.uk/2024/09/22/23/013b05de8957b07ab6930fa3b6a34acaY29udGVudHNlYXJjaGFwaSwxNzI3MTI5MzA4-2.76197429.jpg", x=seq_along(`Chance of Checking Out in Next 3 Throws`), y=`Chance of Checking Out in Next 3 Throws`), size = 0.1, x=18) + 
+  theme_minimal(base_family = "Courier") +
+    theme(plot.background = element_rect(fill = "#F9ECD6", color = NA),
+          panel.grid.major = element_line(color = "grey"),
+          panel.grid.minor = element_line(color = "grey")) + 
+  facet_wrap(~Leg)
+```
+
+```{r}
+#install.packages("gganimate")
+library(gganimate)
+
+x + transition_reveal(seq_along(`Chance of Checking Out in Next 3 Throws`))
+```
+
+```{r}
+last_row_luke1 = Luke1[nrow(Luke1), ]
+
+ggplot(data=Luke1, aes(x=seq_along(`Chance of Checking Out in Next 3 Throws`), y=`Chance of Checking Out in Next 3 Throws`)) +
+  geom_line() + 
+  geom_point() + 
+  geom_image(data = last_row_luke1, aes(image = "https://static.independent.co.uk/2024/09/22/23/013b05de8957b07ab6930fa3b6a34acaY29udGVudHNlYXJjaGFwaSwxNzI3MTI5MzA4-2.76197429.jpg"), size = 0.08, x=17)
+
+#https://static.independent.co.uk/2024/09/22/23/013b05de8957b07ab6930fa3b6a34acaY29udGVudHNlYXJjaGFwaSwxNzI3MTI5MzA4-2.76197429.jpg
+
+#https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/2025-04-03_Premier_League_Darts_Berlin_2025_by_Sandro_Halank%E2%80%93123.jpg/250px-2025-04-03_Premier_League_Darts_Berlin_2025_by_Sandro_Halank%E2%80%93123.jpg
+```
+```{r}
+LukeClutch = Luke %>%
+  filter(!is.na(`Change in < col`)) %>%
+  group_by(Target) %>%
+  summarize(Clutch = mean(`Change in < col`),
+            Dist = mean(`Distance From Target (mm)`),
+            n = n(),
+            throw = mean(throw_num)) %>%
+  arrange(desc(Clutch))
+
+MVGClutch = MVG %>%
+  filter(!is.na(`Change in < col`)) %>%
+  group_by(Target) %>%
+  summarize(Clutch = mean(`Change in < col`),
+            Dist = mean(`Distance From Target (mm)`),
+            n = n(),
+            throw = mean(throw_num)) %>%
+  arrange(desc(Clutch))
+
+#what were they aiming for when their win % increased and decreased the most 
+
+#these can be considered "clutch" and "unclutch" throws if you think about it
+#especially considering this is World Championships
+#so we can consider these their most reliable throws under ultimate pressure 
+#which is good to know for any match you may find yourself in 
+
+#look how Luke is really good at 42 but not 28 or 14, so it's high risk high reward
+#negative means you're missing it and missing it with consequences 
+
+#looking at this also tells us which targets are the most forgiving, such as how the miss distance for 45 is pretty big but the win chance change is relatively small, meaning that even if you're inaccurate on 45, you're probably still good
+#this is likely because missing 45 gives you 15, which also ends in 5 
+
+#While there's a lot of data on both which checkouts are easiest and which combination of 2-3 throws is easiest for completing that checkout, there is not research on setting up an easy checkout
+#this table measures how accurate are on you throws that set up an easy checkout
+#because a big win chance means you've left yourself with an easy amount to finish off, the targets that have the highest clutch are the ones that you're hitting that are setting up easy checkouts
+#comparing this to miss distance shows how forgiving they are as well 
+#this will shift your mid game strategy, where you might be inclined to leave yourself with a slightly harder checkout in exchange for aiming at something first that you're actually going to hit
+#you could be at 70 set up a 40 by hitting a D15, but if you such at D15 in the clutch then maybe consider going for a harder checkout but one that you know you can actually get (like hitting D16 and trying to close out 36 instead)
+
+#these are numbers you only aim for in the clutch, so you need to know which ones you're good at hitting while the pressure is on 
+
+#was luke giving himself easier checkouts? 
+
+#which numbers were each of them good at when it mattered and how much better was Littler
+
+#ability to hit these numbers in the highest possible pressure scenario indicates that they are reliable for these specific players 
+
+#compare 60 and 57 when they needed it most 
+
+#these plots are intentionally selected numbers that aren't necessarily trying to clear the board yet 
+
+#the advantage of tracking this over pure accuracy is that you're not necessarily cooked if you miss because you still get some points most of the time which can also help (15 instead of 45 still gets that 5 off the ones place)
+
+#this one has winning throws left out (intentionally)
+```
+
+```{r}
+#install.packages("circlize")
+library(circlize)
+
+fcts <- 1:20
+
+# Graphical parameters
+circos.par("gap.degree" = 0, "cell.padding" = c(0, 0, 0, 0),
+           start.degree = 360/40, track.margin = c(0, 0), "clock.wise" = FALSE)
+
+# Create the circle
+circos.initialize(factors = fcts, xlim = c(0, 1))
+circos.trackPlotRegion(ylim = c(0, 1), factors = fcts, bg.col = "black",
+    track.height = 0.15)
+
+# Adding the numbers
+circos.trackText(rep(0.5, 20), rep(0.5, 20),  rep(0.5, 20),
+    labels = c(13, 4, 18, 1, 20, 5, 12, 9, 14, 11, 8, 16, 7, 19, 3, 17, 2, 15, 10, 6),
+    factors = fcts, col = "#EEEEEE", font = 2,
+    facing = "downward")
+
+# Double point
+circos.trackPlotRegion(ylim = c(0, 1), factors = fcts,
+    bg.col = rep(c("#df2623", "#11a551"), 10), bg.border = "#EEEEEE", 
+    track.height = 0.05)
+
+# Region between double and triple point
+circos.trackPlotRegion(ylim = c(0, 1), factors = fcts,
+    bg.col = rep(c("black", "#e6cda5"), 10), bg.border = "#EEEEEE", 
+    track.height = 0.275)
+
+# Triple point
+circos.trackPlotRegion(ylim = c(0, 1), factors = fcts,
+    bg.col = rep(c("#df2623", "#11a551"), 10), bg.border = "#EEEEEE",
+    track.height = 0.05)
+
+# Region between triple point and bullseye
+circos.trackPlotRegion(ylim = c(0, 1), factors = fcts, 
+    bg.col = rep(c("black", "#e6cda5"), 10), bg.border = "#EEEEEE",
+    track.height = 0.375)
+
+# 25 points
+draw.sector(center = c(0, 0), start.degree = 0, end.degree = 360,
+    rou1 = 0.1, col = "#11a551", border = "#EEEEEE")
+
+# 50 points
+draw.sector(center = c(0, 0), start.degree = 0, end.degree = 360,
+    rou1 = 0.05, col = "#df2623", border = "#EEEEEE")
+
+# Clear data
+circos.clear()
+```
+```{r}
+region = c("T", "D", "T", "T", "DB", "T", "S", "T", "T", "T", "T", "D", "D", "D", "D")
+
+LukeClutch %>%
+  mutate(Region = region) %>%
+  select(Target, Clutch, Region) 
+
+library(dplyr)
+
+# Your raw data
+dart_data <- data.frame(
+  score = c(42, 30, 15, 33, 50, 45, 5, 51, 54, 60, 57, 14, 40, 20, 28),
+  value = c(37.92, 29.13, 16.64, 14.35, 12.378889, 11.06, 8.68, 7.85, 6.091111, 5.064248, 
+            0.674375, 0, -2.75, -5.13, -7.9),
+  region = c("T", "D", "T", "T", "DB", "T", "S", "T", "T", "T", "T", "D", "D", "D", "D")
+)
+
+# Function to extract base segment number
+dart_data <- dart_data %>%
+  mutate(
+    segment = case_when(
+      region == "T" ~ score / 3,
+      region == "D" ~ score / 2,
+      region == "S" ~ score,
+      region == "DB" ~ NA_real_,
+      TRUE ~ NA_real_
+    ),
+    segment = as.integer(segment)
+  )
+```
+
+```{r}
+Darts0 = Darts %>%
+  filter(`Time Between Turns (secs)`>=0) %>%
+  filter(`Distance From Target (mm)`>=0)
+ggplot() + 
+  geom_point(data=Darts0, mapping=aes(x=`Time Between Turns (secs)`,y=`Distance From Target (mm)`))
+```
+```{r}
+library(circlize)
+library(dplyr)
+
+# Dartboard segment order (clockwise)
+dartboard_order <- c(20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 
+                     3, 19, 7, 16, 8, 11, 14, 9, 12, 5)
+
+# Map segment to position on dartboard
+dart_data <- dart_data %>%
+  mutate(
+    board_pos = match(segment, dartboard_order)
+  )
+
+LukeClutch
+```
+```{r}
+custom_colors = c(
+  "#00FF00", "#33FF00", "#66FF00", "#99FF00", "#CCFF00",  # green → lime
+  "#FFFF00",                                               # yellow
+  "#FFCC00", "#FF9900", "#FF6600", "#FF3300",              # orange shades
+  "#FF0000", "#E60000", "#CC0000", "#B30000", "#990000"    # deep reds
+)
+
+targets = LukeClutch$Target
+
+LukeColors = data.frame(targets, custom_colors)
+
+#"#df2623"", "#11a551", "#e6cda5"
+```
+
+
+```{r}
+# Define a color scale
+col_fun <- circlize::colorRamp2(
+  c(min(LukeClutch$Clutch), 15, max(LukeClutch$Clutch)),
+  c("red", "yellow", "green")
+)
+
+fcts <- 1:20
+
+# Graphical parameters
+circos.par("gap.degree" = 0, "cell.padding" = c(0, 0, 0, 0),
+           start.degree = 360/40, track.margin = c(0, 0), "clock.wise" = FALSE)
+
+# Create the circle
+circos.initialize(factors = fcts, xlim = c(0, 1))
+circos.trackPlotRegion(ylim = c(0, 1), factors = fcts, bg.col = "black",
+    track.height = 0.15)
+
+# Adding the numbers
+circos.trackText(rep(0.5, 20), rep(0.5, 20),  rep(0.5, 20),
+    labels = c(13, 4, 18, 1, 20, 5, 12, 9, 14, 11, 8, 16, 7, 19, 3, 17, 2, 15, 10, 6),
+    factors = fcts, col = "#EEEEEE", font = 2,
+    facing = "downward")
+
+# Double point
+circos.trackPlotRegion(ylim = c(0, 1), factors = fcts,
+    bg.col = rep(c("#df2623", "#11a551"), 10), bg.border = "#EEEEEE", 
+    track.height = 0.05)
+
+# Region between double and triple point
+circos.trackPlotRegion(ylim = c(0, 1), factors = fcts,
+    bg.col = rep(c("black", "#e6cda5"), 10), bg.border = "#EEEEEE", 
+    track.height = 0.275)
+
+# Triple point
+circos.trackPlotRegion(ylim = c(0, 1), factors = fcts,
+    bg.col = rep(c("#df2623", "#11a551"), 10), bg.border = "#EEEEEE",
+    track.height = 0.05)
+
+# Region between triple point and bullseye
+circos.trackPlotRegion(ylim = c(0, 1), factors = fcts, 
+    bg.col = rep(c("black", "#e6cda5"), 10), bg.border = "#EEEEEE",
+    track.height = 0.375)
+
+# 25 points
+draw.sector(center = c(0, 0), start.degree = 0, end.degree = 360,
+    rou1 = 0.1, col = "#11a551", border = "#EEEEEE")
+
+# 50 points
+draw.sector(center = c(0, 0), start.degree = 0, end.degree = 360,
+    rou1 = 0.05, col = "#df2623", border = "#EEEEEE")
+
+# Shade treble 20
+draw.sector(
+  start.degree = 99,      # start of segment 1 (20)
+  end.degree = 81,       # end of segment 1
+  rou1 = 0.53,           # outer radius of treble ring
+  rou2 = 0.47,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 60],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 171,      # start of segment 1 (20)
+  end.degree = 153,       # end of segment 1
+  rou1 = 0.53,           # outer radius of treble ring
+  rou2 = 0.47,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 42],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 333,      # start of segment 1 (20)
+  end.degree = 315,       # end of segment 1
+  rou1 = 0.85,           # outer radius of treble ring
+  rou2 = 0.8,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 30],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 333,      # start of segment 1 (20)
+  end.degree = 315,       # end of segment 1
+  rou1 = 0.53,           # outer radius of treble ring
+  rou2 = 0.47,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 15],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 189,      # start of segment 1 (20)
+  end.degree = 171,       # end of segment 1
+  rou1 = 0.53,           # outer radius of treble ring
+  rou2 = 0.47,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 33],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 360,      # start of segment 1 (20)
+  end.degree = 0,       # end of segment 1
+  rou1 = 0.05,           # outer radius of treble ring
+  rou2 = 0,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 50],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 333,      # start of segment 1 (20)
+  end.degree = 315,       # end of segment 1
+  rou1 = 0.53,           # outer radius of treble ring
+  rou2 = 0.47,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 45],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 117,      # start of segment 1 (20)
+  end.degree = 99,       # end of segment 1
+  rou1 = 0.47,           # outer radius of treble ring
+  rou2 = 0.1,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 5],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 117,      # start of segment 1 (20)
+  end.degree = 99,       # end of segment 1
+  rou1 = 0.8,           # outer radius of treble ring
+  rou2 = 0.53,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 5],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 297,      # start of segment 1 (20)
+  end.degree = 279,       # end of segment 1
+  rou1 = 0.53,           # outer radius of treble ring
+  rou2 = 0.47,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 51],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 63,      # start of segment 1 (20)
+  end.degree = 45,       # end of segment 1
+  rou1 = 0.53,           # outer radius of treble ring
+  rou2 = 0.47,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 54],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 261,      # start of segment 1 (20)
+  end.degree = 243,       # end of segment 1
+  rou1 = 0.53,           # outer radius of treble ring
+  rou2 = 0.47,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 57],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 243,      # start of segment 1 (20)
+  end.degree = 225,       # end of segment 1
+  rou1 = 0.85,           # outer radius of treble ring
+  rou2 = 0.8,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 14],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 99,      # start of segment 1 (20)
+  end.degree = 81,       # end of segment 1
+  rou1 = 0.85,           # outer radius of treble ring
+  rou2 = 0.8,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 40],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 351,      # start of segment 1 (20)
+  end.degree = 333,       # end of segment 1
+  rou1 = 0.85,           # outer radius of treble ring
+  rou2 = 0.8,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 20],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 171,      # start of segment 1 (20)
+  end.degree = 153,       # end of segment 1
+  rou1 = 0.85,           # outer radius of treble ring
+  rou2 = 0.8,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 14],           # your highlight color
+  border = NA            # optional: remove border
+)
+```
+```{r}
+par(family = "Courier")
+
+# Define a color scale
+col_fun <- circlize::colorRamp2(
+  c(min(LukeClutch$Clutch), 15, max(LukeClutch$Clutch)),
+  c("red", "yellow", "green")
+)
+
+fcts <- 1:20
+
+# Graphical parameters
+circos.par("gap.degree" = 0, "cell.padding" = c(0, 0, 0, 0),
+           start.degree = 360/40, track.margin = c(0, 0), "clock.wise" = FALSE)
+
+# Create the circle
+circos.initialize(factors = fcts, xlim = c(0, 1))
+circos.trackPlotRegion(ylim = c(0, 1), factors = fcts, bg.col = "black",
+    track.height = 0.15)
+
+# Adding the numbers
+circos.trackText(rep(0.5, 20), rep(0.5, 20),  rep(0.5, 20),
+    labels = c(13, 4, 18, 1, 20, 5, 12, 9, 14, 11, 8, 16, 7, 19, 3, 17, 2, 15, 10, 6),
+    factors = fcts, col = "#EEEEEE", font = 2,
+    facing = "downward")
+
+# Double point
+circos.trackPlotRegion(ylim = c(0, 1), factors = fcts,
+    bg.col = rep(c("darkgrey", "lightgrey"), 10), bg.border = "black", 
+    track.height = 0.05)
+
+# Region between double and triple point
+circos.trackPlotRegion(ylim = c(0, 1), factors = fcts,
+    bg.col = rep(c("black", "#e6cda5"), 10), bg.border = "black", 
+    track.height = 0.275)
+
+# Triple point
+circos.trackPlotRegion(ylim = c(0, 1), factors = fcts,
+    bg.col = rep(c("darkgrey", "lightgrey"), 10), bg.border = "black",
+    track.height = 0.05)
+
+# Region between triple point and bullseye
+circos.trackPlotRegion(ylim = c(0, 1), factors = fcts, 
+    bg.col = rep(c("black", "#e6cda5"), 10), bg.border = "black",
+    track.height = 0.375)
+
+# 25 points
+draw.sector(center = c(0, 0), start.degree = 0, end.degree = 360,
+    rou1 = 0.1, col = "lightgrey", border = "black")
+
+# 50 points
+draw.sector(center = c(0, 0), start.degree = 0, end.degree = 360,
+    rou1 = 0.05, col = "darkgrey", border = "black")
+
+# Shade treble 20
+draw.sector(
+  start.degree = 99,      # start of segment 1 (20)
+  end.degree = 81,       # end of segment 1
+  rou1 = 0.53,           # outer radius of treble ring
+  rou2 = 0.47,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 60],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 171,      # start of segment 1 (20)
+  end.degree = 153,       # end of segment 1
+  rou1 = 0.53,           # outer radius of treble ring
+  rou2 = 0.47,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 42],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 333,      # start of segment 1 (20)
+  end.degree = 315,       # end of segment 1
+  rou1 = 0.85,           # outer radius of treble ring
+  rou2 = 0.8,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 30],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 333,      # start of segment 1 (20)
+  end.degree = 315,       # end of segment 1
+  rou1 = 0.53,           # outer radius of treble ring
+  rou2 = 0.47,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 15],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 189,      # start of segment 1 (20)
+  end.degree = 171,       # end of segment 1
+  rou1 = 0.53,           # outer radius of treble ring
+  rou2 = 0.47,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 33],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 360,      # start of segment 1 (20)
+  end.degree = 0,       # end of segment 1
+  rou1 = 0.05,           # outer radius of treble ring
+  rou2 = 0,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 50],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 333,      # start of segment 1 (20)
+  end.degree = 315,       # end of segment 1
+  rou1 = 0.53,           # outer radius of treble ring
+  rou2 = 0.47,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 45],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 117,      # start of segment 1 (20)
+  end.degree = 99,       # end of segment 1
+  rou1 = 0.47,           # outer radius of treble ring
+  rou2 = 0.1,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 5],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 117,      # start of segment 1 (20)
+  end.degree = 99,       # end of segment 1
+  rou1 = 0.8,           # outer radius of treble ring
+  rou2 = 0.53,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 5],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 297,      # start of segment 1 (20)
+  end.degree = 279,       # end of segment 1
+  rou1 = 0.53,           # outer radius of treble ring
+  rou2 = 0.47,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 51],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 63,      # start of segment 1 (20)
+  end.degree = 45,       # end of segment 1
+  rou1 = 0.53,           # outer radius of treble ring
+  rou2 = 0.47,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 54],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 261,      # start of segment 1 (20)
+  end.degree = 243,       # end of segment 1
+  rou1 = 0.53,           # outer radius of treble ring
+  rou2 = 0.47,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 57],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 243,      # start of segment 1 (20)
+  end.degree = 225,       # end of segment 1
+  rou1 = 0.85,           # outer radius of treble ring
+  rou2 = 0.8,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 14],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 99,      # start of segment 1 (20)
+  end.degree = 81,       # end of segment 1
+  rou1 = 0.85,           # outer radius of treble ring
+  rou2 = 0.8,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 40],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 351,      # start of segment 1 (20)
+  end.degree = 333,       # end of segment 1
+  rou1 = 0.85,           # outer radius of treble ring
+  rou2 = 0.8,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 20],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 171,      # start of segment 1 (20)
+  end.degree = 153,       # end of segment 1
+  rou1 = 0.85,           # outer radius of treble ring
+  rou2 = 0.8,           # inner radius of treble ring
+  col = LukeColors$custom_colors[LukeColors$targets == 28],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+title(main = "Littler Clutchness: Setting Up Checkouts in Crunch Time", 
+      col.main = "black", 
+      font.main = 2, 
+      cex.main = 1)  # size
+```
+
+```{r}
+MVGClutch = MVGClutch %>%
+  filter(Target != "-")
+
+custom_colors = c(
+  "#00FF00", "#33FF00", "#66FF00", "#99FF00", "#CCFF00",  # green → lime
+  "#FFFF00",                                               # yellow
+  "#FFCC00", "#FF9900", "#FF6600", "#FF3300",              # orange shades
+  "#FF0000", "#E60000", "#CC0000", "#B30000", "#990000"    # deep reds
+)
+
+targets1 = MVGClutch$Target
+
+MVGColors = data.frame(targets1, custom_colors)
+
+MVG %>%
+  filter(Target == 16)
+```
+
+```{r}
+par(family = "Courier")
+
+fcts <- 1:20
+
+# Graphical parameters
+circos.par("gap.degree" = 0, "cell.padding" = c(0, 0, 0, 0),
+           start.degree = 360/40, track.margin = c(0, 0), "clock.wise" = FALSE)
+
+# Create the circle
+circos.initialize(factors = fcts, xlim = c(0, 1))
+circos.trackPlotRegion(ylim = c(0, 1), factors = fcts, bg.col = "black",
+    track.height = 0.15)
+
+# Adding the numbers
+circos.trackText(rep(0.5, 20), rep(0.5, 20),  rep(0.5, 20),
+    labels = c(13, 4, 18, 1, 20, 5, 12, 9, 14, 11, 8, 16, 7, 19, 3, 17, 2, 15, 10, 6),
+    factors = fcts, col = "#EEEEEE", font = 2,
+    facing = "downward")
+
+# Double point
+circos.trackPlotRegion(ylim = c(0, 1), factors = fcts,
+    bg.col = rep(c("darkgrey", "lightgrey"), 10), bg.border = "black", 
+    track.height = 0.05)
+
+# Region between double and triple point
+circos.trackPlotRegion(ylim = c(0, 1), factors = fcts,
+    bg.col = rep(c("black", "#e6cda5"), 10), bg.border = "black", 
+    track.height = 0.275)
+
+# Triple point
+circos.trackPlotRegion(ylim = c(0, 1), factors = fcts,
+    bg.col = rep(c("darkgrey", "lightgrey"), 10), bg.border = "black",
+    track.height = 0.05)
+
+# Region between triple point and bullseye
+circos.trackPlotRegion(ylim = c(0, 1), factors = fcts, 
+    bg.col = rep(c("black", "#e6cda5"), 10), bg.border = "black",
+    track.height = 0.375)
+
+# 25 points
+draw.sector(center = c(0, 0), start.degree = 0, end.degree = 360,
+    rou1 = 0.1, col = "lightgrey", border = "black")
+
+# 50 points
+draw.sector(center = c(0, 0), start.degree = 0, end.degree = 360,
+    rou1 = 0.05, col = "darkgrey", border = "black")
+
+draw.sector(
+  start.degree = 360,      # start of segment 1 (20)
+  end.degree = 0,       # end of segment 1
+  rou1 = 0.05,           # outer radius of treble ring
+  rou2 = 0,           # inner radius of treble ring
+  col = MVGColors$custom_colors[MVGColors$targets == 50],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 333,      # start of segment 1 (20)
+  end.degree = 315,       # end of segment 1
+  rou1 = 0.53,           # outer radius of treble ring
+  rou2 = 0.47,           # inner radius of treble ring
+  col = MVGColors$custom_colors[MVGColors$targets == 45],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 351,      # start of segment 1 (20)
+  end.degree = 333,       # end of segment 1
+  rou1 = 0.85,           # outer radius of treble ring
+  rou2 = 0.8,           # inner radius of treble ring
+  col = MVGColors$custom_colors[MVGColors$targets == 20],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 243,      # start of segment 1 (20)
+  end.degree = 225,       # end of segment 1
+  rou1 = 0.85,           # outer radius of treble ring
+  rou2 = 0.8,           # inner radius of treble ring
+  col = MVGColors$custom_colors[MVGColors$targets == 14],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 153,      # start of segment 1 (20)
+  end.degree = 135,       # end of segment 1
+  rou1 = 0.8,           # outer radius of treble ring
+  rou2 = 0.53,           # inner radius of treble ring
+  col = MVGColors$custom_colors[MVGColors$targets == 9],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 153,      # start of segment 1 (20)
+  end.degree = 135,       # end of segment 1
+  rou1 = 0.47,           # outer radius of treble ring
+  rou2 = 0.1,           # inner radius of treble ring
+  col = MVGColors$custom_colors[MVGColors$targets == 9],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 207,      # start of segment 1 (20)
+  end.degree = 189,       # end of segment 1
+  rou1 = 0.8,           # outer radius of treble ring
+  rou2 = 0.53,           # inner radius of treble ring
+  col = MVGColors$custom_colors[MVGColors$targets == 8],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 207,      # start of segment 1 (20)
+  end.degree = 189,       # end of segment 1
+  rou1 = 0.47,           # outer radius of treble ring
+  rou2 = 0.1,           # inner radius of treble ring
+  col = MVGColors$custom_colors[MVGColors$targets == 8],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 63,      # start of segment 1 (20)
+  end.degree = 45,       # end of segment 1
+  rou1 = 0.53,           # outer radius of treble ring
+  rou2 = 0.47,           # inner radius of treble ring
+  col = MVGColors$custom_colors[MVGColors$targets == 54],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 135,      # start of segment 1 (20)
+  end.degree = 117,       # end of segment 1
+  rou1 = 0.53,           # outer radius of treble ring
+  rou2 = 0.47,           # inner radius of treble ring
+  col = MVGColors$custom_colors[MVGColors$targets == 36],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 297,      # start of segment 1 (20)
+  end.degree = 279,       # end of segment 1
+  rou1 = 0.53,           # outer radius of treble ring
+  rou2 = 0.47,           # inner radius of treble ring
+  col = MVGColors$custom_colors[MVGColors$targets == 51],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 99,      # start of segment 1 (20)
+  end.degree = 81,       # end of segment 1
+  rou1 = 0.53,           # outer radius of treble ring
+  rou2 = 0.47,           # inner radius of treble ring
+  col = MVGColors$custom_colors[MVGColors$targets == 60],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 261,      # start of segment 1 (20)
+  end.degree = 243,       # end of segment 1
+  rou1 = 0.53,           # outer radius of treble ring
+  rou2 = 0.47,           # inner radius of treble ring
+  col = MVGColors$custom_colors[MVGColors$targets == 57],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 99,      # start of segment 1 (20)
+  end.degree = 81,       # end of segment 1
+  rou1 = 0.85,           # outer radius of treble ring
+  rou2 = 0.8,           # inner radius of treble ring
+  col = MVGColors$custom_colors[MVGColors$targets == 40],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 207,      # start of segment 1 (20)
+  end.degree = 189,       # end of segment 1
+  rou1 = 0.85,           # outer radius of treble ring
+  rou2 = 0.8,           # inner radius of treble ring
+  col = MVGColors$custom_colors[MVGColors$targets == 16],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 315,      # start of segment 1 (20)
+  end.degree = 297,       # end of segment 1
+  rou1 = 0.85,           # outer radius of treble ring
+  rou2 = 0.8,           # inner radius of treble ring
+  col = MVGColors$custom_colors[MVGColors$targets == 4],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+draw.sector(
+  start.degree = 360,      # start of segment 1 (20)
+  end.degree = 0,       # end of segment 1
+  rou1 = 0.1,           # outer radius of treble ring
+  rou2 = 0.05,           # inner radius of treble ring
+  col = MVGColors$custom_colors[MVGColors$targets == 25],           # your highlight color
+  border = NA            # optional: remove border
+)
+
+title(main = "MVG Clutchness: Setting Up Checkouts in Crunch Time", 
+      col.main = "black", 
+      font.main = 2, 
+      cex.main = 1)  # size
+```
+```{r}
+#darts = darts %>%
+#  mutate(Hit = ifelse(`Expected - Actual Points`!=0, 0, 1))
+#LukeHit = darts %>%
+#  filter(Name == "Littler") 
+#LukeHit %>%
+#  filter(`Score Left` <= 60) %>%
+#  group_by(Target) %>%
+#  summarize(Accuracy = mean(Hit))
+
+objectives = Luke %>%
+  filter(Throw == 3) %>%
+  select(Name, Turn, checkout_objective = `Score Left`, expected = `Chance of Checking Out in Next 3 Throws`) %>%
+  mutate(Turn = Turn + 1)
+
+LukeCO = left_join(Luke, objectives, by=c("Turn","Leg"))
+LukeCO = LukeCO %>%
+  mutate(Hit = ifelse(`Expected - Actual Points`!=0, 0, 1)) %>%
+  group_by(checkout_objective, expected, Leg) %>%
+  summarize(GotIt = `Leg Win? (Bin)`)
+
+#according to the checkout almanac, once you're 60 or under you have >50% chance of checking out 
+#make a variable that has the score left from the previous turn which indicates which checkout he's actually going for 
+
+LukeCOxP = LukeCO %>%
+  group_by(checkout_objective, Leg) %>%
+  summarize(GotItPlus = sum(GotIt),
+            expected = mean(expected)) %>%
+  arrange(Leg) %>%
+  mutate(mult = ifelse(GotItPlus == 1, 1, -1),
+         x = ifelse(mult == 1, 100-expected, expected),
+         xp = x*mult)
+
+#this along with the original win percentage charts show that, as good as Luke was, MVG low key lost it
+
+LukexP = LukeCOxP %>%
+  na.omit() %>%
+  group_by(Leg) %>%
+  summarize(AboveExpectedLuke = sum(xp))
+
+objectives = MVG %>%
+  filter(Throw == 3) %>%
+  select(Name, Turn, checkout_objective = `Score Left`, expected = `Chance of Checking Out in Next 3 Throws`) %>%
+  mutate(Turn = Turn + 1)
+
+MVGCO = left_join(MVG, objectives, by=c("Turn","Leg"))
+MVGCO = MVGCO %>%
+  mutate(Hit = ifelse(`Expected - Actual Points`!=0, 0, 1)) %>%
+  group_by(checkout_objective, expected, Leg) %>%
+  summarize(GotIt = `Leg Win? (Bin)`)
+
+#according to the checkout almanac, once you're 60 or under you have >50% chance of checking out 
+#make a variable that has the score left from the previous turn which indicates which checkout he's actually going for 
+
+MVGCOxP = MVGCO %>%
+  group_by(checkout_objective, Leg) %>%
+  summarize(GotItPlus = sum(GotIt),
+            expected = mean(expected)) %>%
+  arrange(Leg) %>%
+  mutate(mult = ifelse(GotItPlus == 1, 1, -1),
+         x = ifelse(mult == 1, 100-expected, expected),
+         xp = x*mult)
+
+#this along with the original win percentage charts show that, as good as Luke was, MVG low key lost it
+
+MVGxP = MVGCOxP %>%
+  na.omit() %>%
+  group_by(Leg) %>%
+  summarize(AboveExpectedMVG = sum(xp))
+
+xP = left_join(LukexP, MVGxP, by = "Leg")
+xP = xP %>%
+  mutate(AboveExpectedMVG = ifelse(AboveExpectedMVG == -63.6, -127.2, AboveExpectedMVG))
+```
+
+```{r}
+xP_long = pivot_longer(xP, cols = c("AboveExpectedLuke", "AboveExpectedMVG"),
+                        names_to = "Player", values_to = "AboveExpected")
+
+ggplot(xP_long, aes(x = factor(Leg), y = AboveExpected, fill = Player)) +
+  geom_bar(stat = "identity", position = "identity", alpha = 0.8) +
+  scale_fill_manual(values = c("AboveExpectedLuke" = "orange", "AboveExpectedMVG" = "skyblue")) +
+  labs(x = "Leg", y = "Points Above Expected", title = "Checkout Points Above Expected by Leg") +
+  theme_minimal() + 
+  geom_hline(yintercept = 50, color = "black", linewidth = 0.5) + 
+  geom_hline(yintercept = -50, color = "black", linewidth = 0.5) + 
+  theme_minimal(base_family = "Courier") +
+    theme(plot.background = element_rect(fill = "#F9ECD6", color = NA),
+          panel.grid.major = element_line(color = "grey"),
+          panel.grid.minor = element_line(color = "grey"),
+          legend.position = "bottom")
+
+#what this shows us is that he's not really getting into scoring position, which is likely because of the bad set ups (so maybe this visual should come first in the paper)
+#he't not choking as much as he's just not giving himself easy checkouts
+#this brings us to the baords, which show what where he's missing in these clutch scenarios and where he's having success
+#in the future, look more to these areas in late game situations where you need to checkout
+#obviously the math ultimately determines where you need to aim but you can't set up your favorite checkout without being able to hit the thing that gets you there
+#focus more on good set ups 
+
+#the reason this looks different from the first graph is because that one measures what the expected chance is of checking out on the next throw, and often times he set himself up too late. this one only includes checkouts that you actually tried. So MVG was getting good things ready, but not quick enough, as seen in this one 
+```
+```{r}
+ggplot() + 
+  geom_hline(yintercept = 100, color = "black") +
+  annotate("text", x = 2, y = 102, label = "Leg Won", size = 3) + 
+  
+  # Luke's data
+  geom_point(data = LukeWin, aes(x = throw_num, y = `Chance of Checking Out in Next 3 Throws`, color = "Luke Littler")) + 
+  geom_line(data = LukeWin, aes(x = throw_num, y = `Chance of Checking Out in Next 3 Throws`, group = 1, color = "Luke Littler")) +
+  
+  # MVG's data
+  geom_point(data = MVGWin, aes(x = throw_num, y = `Chance of Checking Out in Next 3 Throws`, color = "MVG")) + 
+  geom_line(data = MVGWin, aes(x = throw_num, y = `Chance of Checking Out in Next 3 Throws`, group = 1, color = "MVG")) +
+  
+  # Axis labels
+  xlab("Darts Thrown: Each Leg") + 
+  ylab("Chance of Checking out in Next 3 Throws") +
+  
+  # Colors in legend
+  scale_color_manual(values = c("Luke Littler" = "orange", "MVG" = "skyblue")) +
+  
+  # Styling
+  theme_minimal(base_family = "Courier") +
+  theme(
+    plot.background = element_rect(fill = "#F9ECD6", color = NA),
+    panel.grid.major = element_line(color = "grey"),
+    panel.grid.minor = element_line(color = "grey"),
+    legend.position = "bottom"  # or "bottom", "left", "right"
+  ) +
+  
+  # Facet
+  facet_wrap(~Leg)
+```
+
+```{r}
+LC = LukeClutch %>%
+  filter(Target != 60) %>%
+  filter(Target != 57)
+
+MVGC = MVGClutch %>%
+  filter(Target != 60) %>%
+  filter(Target != 57)
+
+sum(LC$Clutch)/13
+sum(MVGC$Clutch)/13
+
+LCa = LukeClutch %>%
+  filter((Target == 60) | (Target == 57)) 
+
+MVGa = MVGClutch %>%
+  filter((Target == 60) | (Target == 57))
+
+sum(LCa$Clutch)/13
+sum(MVGa$Clutch)/13
+
+#wanna find out where the steep spikes come from
+#not a linear relationship but kinda exponential so which shots are causing that
+#it looks like MVG had a good chance at winning those so was he choking?
+#no that graph isn't entirely fair 
+#finally, Luke was more efficient in hitting good numbers that got him closer to an easier finish
+#this is average win points added on non T20 and T19 throws, which shows how good he was at hitting the right spots in clutch time, when you're not just aiming for the largest number anymore in the late game 
+```
+
+```{r}
+MVGxP_Plus = MVGCOxP %>%
+  na.omit() %>%
+  group_by(Leg) %>%
+  summarize(AboveExpectedMVG = sum(xp)-prod(xp))
+
+LukexP_Plus = LukeCOxP %>%
+  na.omit() %>%
+  group_by(Leg) %>%
+  summarize(AboveExpectedLuke = sum(xp)-prod(xp))
+
+xP_Plus = left_join(LukexP_Plus, MVGxP_Plus, by = "Leg")
+xP_Plus = xP_Plus %>%
+  mutate(LukePercent = AboveExpectedLuke/100,
+         MVGPercent = AboveExpectedMVG/100)
+xP_Plus = xP_Plus %>%
+  mutate(MVGPercent = ifelse(MVGPercent == -0.00867504, -((.636*2)-(.636*.636)), MVGPercent))
+```
+```{r}
+xP_long_Plus = pivot_longer(xP_Plus, cols = c("LukePercent", "MVGPercent"),
+                        names_to = "Player", values_to = "Percent")
+
+ggplot(xP_long_Plus, aes(x = factor(Leg), y = Percent, fill = Player)) +
+  geom_bar(stat = "identity", position = "identity", alpha = 0.8) +
+  scale_fill_manual(values = c("LukePercent" = "orange", "MVGPercent" = "skyblue")) +
+  labs(x = "Leg", y = "Expected Win Points", title = "Expected Win Points per Leg") +
+  theme_minimal() + 
+  geom_hline(yintercept = 0.5, color = "black", linewidth = 0.5) + 
+  geom_hline(yintercept = -0.5, color = "black", linewidth = 0.5) + 
+  theme_minimal(base_family = "Courier") +
+    theme(plot.background = element_rect(fill = "#F9ECD6", color = NA),
+          panel.grid.major = element_line(color = "grey"),
+          panel.grid.minor = element_line(color = "grey"),
+          legend.position = "bottom")
+```
+
