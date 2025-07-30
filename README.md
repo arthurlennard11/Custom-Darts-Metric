@@ -1,5 +1,45 @@
-## Custom-Darts-Metric
+# 🎯 Darts Performance Analysis with Expected Win Chance
 
-### In this project, I wanted to take a pre existing metric that is often used in other sports and adapt it to darts, because there are relatively little advanced statistics surrounding the sport. That new metric was Expected Win Chance, and I used data from the 2025 World Darts Championship to develop it. This was done first by gathering historical statistics on the success rates of pro darts players on each potential checkout. After that, I was able to calculate how their chance of checking out on their next turn changed based on what they were aiming at during the current turn. In creating this new metric, another one came out naturally as well: what I called "Clutchness". Clutchess referred to the areas on the board that the players increased their win chance the most by aiming at. I concluded that these were the most reliable targets for each of the players on the night. More in depth explanations and summary of results are in the report tab. 
+---
 
-### *while the paper was a group project, I was solely responsible for the custom metrics and associated visuals discussed in the report
+## 🎯 Goal
+
+To adapt a well-known concept from other sports — **Expected Win Chance** — to darts, with the aim of developing **advanced metrics** that shed light on in-match decision-making and player reliability.
+
+---
+
+## 🧠 Hypothesis
+
+By analyzing throw-by-throw decision-making and outcomes, it is possible to **quantify changes in win probability** during a darts match and identify which **target areas** are most impactful for each player.
+
+---
+
+## 📊 Data
+
+- Manually-gathered match-by-match data from the **2025 PDC World Darts Championship**
+- Historical checkout success rates for professional darts players
+- Focused on identifying:
+  - Impactful decisions on each turn
+  - Which board targets increased win chances the most
+
+---
+
+## 🧪 Methods
+
+- Gathered historical checkout data to calculate **expected checkout success rates**
+- Used these to create a new metric: **Expected Win Chance**, updated after each turn
+- Developed a secondary metric, **Clutchness**, to evaluate which areas of the board players used to **maximize increase in win probability**
+- Analyzed how decision-making on critical throws impacted match outcomes
+- Used to explain Luke Littler’s win vs. Michael van Gerwen
+
+---
+
+## 🏁 Outcome
+
+The model revealed **nuanced strategic tendencies**, uncovering how Littler gained small but consistent edges by targeting **high-leverage areas**.  
+The **Expected Win Chance** and **Clutchness** metrics uncovered meaningful insights not previously available in darts analytics.
+
+Further explanations and visual summaries can be found in the **Report** tab.
+
+---
+
