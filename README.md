@@ -32,6 +32,10 @@ By analyzing throw-by-throw decision-making and outcomes, it is possible to **qu
 - Analyzed how decision-making on critical throws impacted match outcomes
 - Used to explain Luke Littler’s win vs. Michael van Gerwen
 
+&npsb;
+
+<img src="Highlighted%20Visuals/Expected%20Win%20Points.png" width="50%">
+
 ---
 
 ## 🏁 Outcome
