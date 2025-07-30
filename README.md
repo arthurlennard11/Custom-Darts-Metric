@@ -36,6 +36,8 @@ By analyzing throw-by-throw decision-making and outcomes, it is possible to **qu
 
 <img src="Highlighted%20Visuals/Expected%20Win%20Points.png" width="50%">
 
+- This graph shows win points above expected per leg, which is the sum of the win percentage points that each player accumulated throughout the leg minus the sum of the expected win percentage points from the checkouts they attempted
+
 ---
 
 ## 🏁 Outcome
