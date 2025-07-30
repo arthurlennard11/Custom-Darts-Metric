@@ -32,7 +32,7 @@ By analyzing throw-by-throw decision-making and outcomes, it is possible to **qu
 - Analyzed how decision-making on critical throws impacted match outcomes
 - Used to explain Luke Littler’s win vs. Michael van Gerwen
 
-&npsb;
+&nbsp;
 
 <img src="Highlighted%20Visuals/Expected%20Win%20Points.png" width="50%">
 
@@ -42,6 +42,14 @@ By analyzing throw-by-throw decision-making and outcomes, it is possible to **qu
 
 The model revealed **nuanced strategic tendencies**, uncovering how Littler gained small but consistent edges by targeting **high-leverage areas**.  
 The **Expected Win Chance** and **Clutchness** metrics uncovered meaningful insights not previously available in darts analytics.
+
+&nbsp;
+
+<img src="Highlighted%20Visuals/Littler%20Clutchness.png" width="50%">
+
+&nbsp;
+
+<img src="Highlighted%20Visuals/Van%20Gerwen%20Clutchness.png" width="50%">
 
 Further explanations and visual summaries can be found in the **Report** tab.
 
