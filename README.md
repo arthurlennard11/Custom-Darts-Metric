@@ -16,7 +16,7 @@ By analyzing throw-by-throw decision-making and outcomes, it is possible to **qu
 
 ## 📊 Data
 
-- Manually-gathered match-by-match data from the **2025 PDC World Darts Championship**
+- Manually-gathered throw-by-throw data from the **2025 PDC World Darts Championship Final**
 - Historical checkout success rates for professional darts players
 - Focused on identifying:
   - Impactful decisions on each turn
