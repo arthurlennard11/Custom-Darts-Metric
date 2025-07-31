@@ -42,8 +42,8 @@ By analyzing throw-by-throw decision-making and outcomes, it is possible to **qu
 
 ## 🏁 Outcome
 
-The model revealed **nuanced strategic tendencies**, uncovering how Littler gained small but consistent edges by targeting **high-leverage areas**.  
-The **Expected Win Chance** and **Clutchness** metrics uncovered meaningful insights not previously available in darts analytics.
+- The model revealed **nuanced strategic tendencies**, uncovering how Littler gained small but consistent edges by targeting **high-leverage areas**.  
+- The **Expected Win Chance** and **Clutchness** metrics uncovered meaningful insights not previously available in darts analytics.
 
 &nbsp;
 
